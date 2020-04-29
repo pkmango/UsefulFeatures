@@ -6,8 +6,12 @@ public class Graph : MonoBehaviour
     public Transform pointPrefab;
     [Range(10, 100)]
     public int resolution = 10;
-    public float lengthForX = 1f;
+    public GraphFunctionName function;
     Transform[] points;
+
+    static GraphFunction[] functions = {
+        SineFunction, MultiSineFunction
+    };
 
     void Awake()
     {
@@ -17,11 +21,10 @@ public class Graph : MonoBehaviour
         position.z = 0f;
         position.y = 0f;
         points = new Transform[resolution];
-        for (int i = 0; i < lengthForX * points.Length; i++)
+        for (int i = 0; i < points.Length; i++)
         {
             Transform point = Instantiate(pointPrefab);
-            position.x = (i + 0.5f) * step - lengthForX;
-            //position.y = position.x * position.x * position.x;
+            position.x = (i + 0.5f) * step - 1f;
             point.localPosition = position;
             point.localScale = scale;
             point.SetParent(transform, false);
@@ -30,13 +33,30 @@ public class Graph : MonoBehaviour
         }
     }
 
+    static float SineFunction(float x, float t)
+    {
+        return Mathf.Sin(Mathf.PI * (x + t));
+    }
+
+    static float MultiSineFunction(float x, float t)
+    {
+        float y = Mathf.Sin(Mathf.PI * (x + t));
+        y += Mathf.Sin(2f * Mathf.PI * (x + 2f * t)) / 2f;
+        y *= 2f / 3f;
+        return y;
+    }
+
     void Update()
     {
-        for (int i = 0; i < lengthForX * points.Length; i++)
+        float t = Time.time;
+        GraphFunction f = functions[(int)function];
+
+        for (int i = 0; i < points.Length; i++)
         {
             Transform point = points[i];
             Vector3 position = point.localPosition;
-            position.y = Mathf.Sin(Mathf.PI * (position.x + Time.time));
+
+            position.y = f(position.x, t);
             point.localPosition = position;
         }
     }
